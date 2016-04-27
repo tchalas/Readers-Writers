@@ -1,0 +1,73 @@
+Problem: Writers – readers in shared memory with starvation freedom for both sides.
+
+init: Create and initialize shared memory and semaphores
+cleanall: Cleans semaphores and shared segments from the system
+writer: Writes to the shared memory segment
+reader: Reads from the shared segment
+
+I have used posix name semaphores together with posix shared memory
+
+#Compilation and cleaning
+Compile: Makefile included, just type make on the source's containing folder.
+Clean executables: type make clean
+
+Executing programs
+init: ./init [memory name]
+cleanall: ./cleanall [memory name]
+writer: ./writer -r [lower byte] [upper byte] -d [period] -s [shmid]
+reader: ./reader -r [lower byte] [upper byte] -d [period] -s [shmid]
+
+Use a memory name of your choice.
+
+Algorithms Starvation – Freedom
+
+Semaphore: order -> 1, access -> 1, readers -> 1, readers_counter -> 0
+
+Reader
+P(order)
+// remember our order of arrival
+P(readers)
+// we will access the readers counter
+sem_getvalue(readers_counter, &count)
+//get current number of readers
+if (count == 0)
+// if there isn't any
+{
+P(access_sem)
+//get exclusive access for readers
+}
+V(readers_counter)
+//increase the number of readers
+V(order)
+//we dont want to hold the order any
+//more as we are already in
+V(readers)
+//we are done using the counter
+READ SHARED MEMORY
+P(readers)
+//access the readers counter again
+P(readers_counter)
+//our reader has been served
+sem_getvalue(readerscount_sem, &count)
+if (count == 0)
+//if no more readers
+{
+V(access);
+//releade exclusive readers access
+}
+V(readers)
+//we are done with the counter
+
+
+Writer
+
+P(order)
+// holding the order of arrival
+P(access)
+// exclusive access to the shared segment
+V(order)
+//no need to hold the order any more
+WRITE TO SHARED MEM
+V(access)
+// Release exclusive writer access
+
